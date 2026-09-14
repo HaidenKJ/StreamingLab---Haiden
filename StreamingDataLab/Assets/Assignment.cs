@@ -4,10 +4,12 @@ This RPG data streaming assignment was created by Fernando Restituto.
 Pixel RPG characters created by Sean Browning.
 */
 
-using System.Collections;
+using System;
 using System.Collections.Generic;
 using UnityEngine;
-
+using System.Linq;
+using System.Text;
+using System.IO;
 
 #region Assignment Instructions
 
@@ -48,8 +50,8 @@ public partial class PartyCharacter
     public int wisdom;
 
     public LinkedList<int> equipment;
-
 }
+
 
 
 /*
@@ -75,21 +77,65 @@ static public class AssignmentPart1
 
     static public void SavePartyButtonPressed()
     {
-        foreach (PartyCharacter pc in GameContent.partyCharacters)
+        // Writing to a file
+        using (StreamWriter sw = new StreamWriter("Schmungus.txt"))
         {
-            Debug.Log("PC class id == " + pc.classID);
+            sw.WriteLine(GameContent.partyCharacters.Count);
+
+            foreach (PartyCharacter pc in GameContent.partyCharacters)
+            {
+                Debug.Log("PC class id == " + pc.classID + " was saved to Schmungus.txt");
+                sw.WriteLine(pc.classID);
+                sw.WriteLine(pc.health);
+                sw.WriteLine(pc.mana);
+                sw.WriteLine(pc.strength);
+                sw.WriteLine(pc.agility);
+                sw.WriteLine(pc.wisdom);
+                sw.WriteLine(pc.equipment.Count);
+
+                foreach (int eq in pc.equipment)
+                {
+                    sw.WriteLine(eq);
+                }
+            }
         }
     }
 
     static public void LoadPartyButtonPressed()
     {
+        GameContent.partyCharacters.Clear();
 
-        //GameContent.partyCharacters.Clear();
+        // Reading from a file
+        using (StreamReader sr = new StreamReader("Schmungus.txt"))
+        {
+            string line = sr.ReadLine();
+            int count = int.Parse(line);
+            for (int i = 0; i < count; i++) 
+            {;
+                PartyCharacter pc = new PartyCharacter();
 
+                pc.classID = int.Parse(sr.ReadLine());
+                Debug.Log("PC class id == " + pc.classID + " was loaded from Schmungus.txt");
+
+                pc.health = int.Parse(sr.ReadLine());
+                pc.mana = int.Parse(sr.ReadLine());
+                pc.strength = int.Parse(sr.ReadLine());
+                pc.agility = int.Parse(sr.ReadLine());
+                pc.wisdom = int.Parse(sr.ReadLine());
+
+                int equipmentCount = int.Parse(sr.ReadLine());
+                pc.equipment.Clear();
+
+                for (int j = 0; j < equipmentCount; j++)
+                {
+                    pc.equipment.AddLast(int.Parse(sr.ReadLine()));
+                }
+
+                GameContent.partyCharacters.AddLast(pc);
+            }
+        }
         GameContent.RefreshUI();
-
     }
-
 }
 
 
