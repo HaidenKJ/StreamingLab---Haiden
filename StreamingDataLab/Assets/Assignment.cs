@@ -10,7 +10,6 @@ using UnityEngine;
 using System.Linq;
 using System.Text;
 using System.IO;
-
 #region Assignment Instructions
 
 /*  Hello!  Welcome to your first lab :)
@@ -37,7 +36,6 @@ Lab Part 1
     Access to Party Character data is provided via demo usage in the save and load functions.
 
     The PartyCharacter class members are defined as follows.  */
-
 public partial class PartyCharacter
 {
     public int classID;
@@ -77,7 +75,7 @@ static public class AssignmentPart1
 
     static public void SavePartyButtonPressed()
     {
-        // Writing to a file
+        // Writing to a file (Serialization transforms data you have stored away in class instances with that of a data stream, a sequence.)
         using (StreamWriter sw = new StreamWriter("Schmungus.txt"))
         {
             sw.WriteLine(GameContent.partyCharacters.Count);
@@ -105,7 +103,7 @@ static public class AssignmentPart1
     {
         GameContent.partyCharacters.Clear();
 
-        // Reading from a file
+        // Reading from a file (Deserialization transforms a data stream back into class instances)
         using (StreamReader sr = new StreamReader("Schmungus.txt"))
         {
             string line = sr.ReadLine();
@@ -114,6 +112,7 @@ static public class AssignmentPart1
             {;
                 PartyCharacter pc = new PartyCharacter();
 
+                // The parse function is used to convert a string into a number.  It will throw an exception if the string is not a valid number. ( Basically the opposite of ToString() )
                 pc.classID = int.Parse(sr.ReadLine());
                 Debug.Log("PC class id == " + pc.classID + " was loaded from Schmungus.txt");
 
@@ -148,9 +147,11 @@ static public class AssignmentPart1
 //  To inform the internal systems that you are proceeding onto the second part of this assignment,
 //  change the below value of AssignmentConfiguration.PartOfAssignmentInDevelopment from 1 to 2.
 //  This will enable the needed UI/function calls for your to proceed with your assignment.
+
+
 static public class AssignmentConfiguration
 {
-    public const int PartOfAssignmentThatIsInDevelopment = 1;
+    public const int PartOfAssignmentThatIsInDevelopment = 2;
 }
 
 /*
@@ -188,31 +189,122 @@ Good luck, journey well.
 
 static public class AssignmentPart2
 {
+    static string fileName = null;
+    static string partyName = null;
+
 
     static public void GameStart()
     {
-
+        Directory.CreateDirectory("SavedParties"); // Creates the folder called SavedParties if it doesn't exist.
+        if (Directory.Exists("SavedParties"))
+        {
+            Debug.Log("The SavedParties_folder has been created.");
+        }
         GameContent.RefreshUI();
-
     }
 
     static public List<string> GetListOfPartyNames()
     {
-        return new List<string>() {
-            "sample 1",
-            "sample 2",
-            "sample 3"
-        };
+        List<string> names = new List<string>();
 
+        foreach (string path in Directory.GetFiles("SavedParties", "*.txt")) // an array of every file path matching *.txt in SavedParties folder
+        {
+            using (StreamReader sr = new StreamReader(path))
+            {
+                string trueName = sr.ReadLine();
+                names.Add(trueName);
+            }
+        }
+        return names;
     }
 
     static public void LoadPartyDropDownChanged(string selectedName)
     {
+        GameContent.partyCharacters.Clear();
+        foreach (string path in Directory.GetFiles("SavedParties", "*.txt"))
+        {
+            using (StreamReader sr = new StreamReader(path))
+            {
+            string trueName = sr.ReadLine();
+            if (trueName != selectedName)
+            {
+                continue;
+            }
+            partyName = trueName;
+            fileName = path;
+            // Something tells me I might have overcomplicated this
+
+
+            string line = sr.ReadLine();
+            int count = int.Parse(line);
+            for (int i = 0; i < count; i++) 
+                {
+                    PartyCharacter pc = new PartyCharacter();
+
+                    // The parse function is used to convert a string into a number.  It will throw an exception if the string is not a valid number. ( Basically the opposite of ToString() )
+                    pc.classID = int.Parse(sr.ReadLine());
+                    Debug.Log("PC class id == " + pc.classID + " was loaded from " + fileName);
+
+                    pc.health = int.Parse(sr.ReadLine());
+                    pc.mana = int.Parse(sr.ReadLine());
+                    pc.strength = int.Parse(sr.ReadLine());
+                    pc.agility = int.Parse(sr.ReadLine());
+                    pc.wisdom = int.Parse(sr.ReadLine());
+
+                    int equipmentCount = int.Parse(sr.ReadLine());
+                    pc.equipment.Clear();
+
+                    for (int j = 0; j < equipmentCount; j++)
+                    {
+                        pc.equipment.AddLast(int.Parse(sr.ReadLine()));
+                    }
+
+                    GameContent.partyCharacters.AddLast(pc);
+                }
+            }
+        }
         GameContent.RefreshUI();
+
     }
 
     static public void SavePartyButtonPressed()
     {
+        Directory.CreateDirectory("SavedParties");
+        // Having a second CreateDirectory is just a failsafe, I heard that if the directory already exists, it will just ignore the command, so I put it here just in case my paranoia is right.
+
+        
+        partyName = GameContent.GetPartyNameFromInput();
+        fileName = GenerateUniqueFileName();
+        // My mouse literally just broke :]
+
+        if (fileName == null)
+        {
+            Debug.Log("Cap reached, cannot save more than 100 parties.");
+            return; // This activates automatically when all save slots are filled, and prevents the user from saving more than 100 parties.
+        }
+
+        using (StreamWriter sw = new StreamWriter(fileName))
+        {
+            sw.WriteLine(partyName);
+            sw.WriteLine(GameContent.partyCharacters.Count);
+
+            foreach (PartyCharacter pc in GameContent.partyCharacters)
+            {
+                Debug.Log("PC class id == " + pc.classID + " was saved to " + partyName + ".txt"); // It actually saves to fileName, but this Debug is just for simplicity's sake.
+                sw.WriteLine(pc.classID);
+                sw.WriteLine(pc.health);
+                sw.WriteLine(pc.mana);
+                sw.WriteLine(pc.strength);
+                sw.WriteLine(pc.agility);
+                sw.WriteLine(pc.wisdom);
+                sw.WriteLine(pc.equipment.Count);
+
+                foreach (int eq in pc.equipment)
+                {
+                    sw.WriteLine(eq);
+                }
+            }
+        }
         GameContent.RefreshUI();
     }
 
@@ -224,6 +316,22 @@ static public class AssignmentPart2
     static public void DeletePartyButtonPressed()
     {
 
+    }
+
+    static public string GenerateUniqueFileName()
+    {
+        int SmurbleMax = Directory.GetFiles("SavedParties", "*.txt").Length;
+
+        if (SmurbleMax >= 100) // This is the cap
+        {
+            Debug.Log("Congratulations, if you’re seeing this Debug.Log message… Why did you do this? I’m revoking your saving privileges; overwrite an existing save instead!");
+            return null;
+        }
+        
+        string Smurble;
+        do {Smurble = "SavedParties/Schmungus" + UnityEngine.Random.Range(0, 100) + ".txt";} // The Smurble saves the SavedParties/Schmungus, then it adds a random integer from 1 to 100 + ".txt" 
+        while (File.Exists(Smurble)); // Then, if a file named Smurble exists, then :[
+        return Smurble; // If not, then you get a Smurble
     }
 
 }
