@@ -229,14 +229,45 @@ static public class AssignmentPart2 // saving and loading multiple parties, with
         GameContent.RefreshUI();
     }
 
-    static public void NewPartyButtonPressed()
+    static public void NewPartyButtonPressed() // Is the new party function supposed to be a overwrite? We already have a save and reroll function?
     {
-
+    if (fileName != null)
+        {
+            File.Delete(fileName);
+            fileName = null;
+        }
+        if (partyName != null)
+        {
+            partyName = null;
+        }
+        
+    // This func just deletes the current party, so the user can start fresh with a new party.
+    GameContent.RerollParty();
+    // Call RerollParty() to generate a new party, so the user doesn't need to press 2 buttons. I'm lazy
+    SavePartyButtonPressed();
+    // Automatically saves the parties.
+    GameContent.RefreshUI();
+    // Refresh the UI to actually show the new party, and to clear the input field for the party name.
     }
 
     static public void DeletePartyButtonPressed()
     {
+        GameContent.partyCharacters.Clear();
 
+        if (fileName != null)
+        {
+            File.Delete(fileName);
+            Debug.Log("...");
+            fileName = null;
+        }
+
+        if (partyName != null)
+        {
+            Debug.Log("~~~~~ The heroic party of " + partyName + ", has been lost to the sands of time, just as all names shall be lost. ~~~~~");
+            partyName = null;
+        }
+
+        GameContent.RefreshUI();
     }
 
     static public string GenerateUniqueFileName()
