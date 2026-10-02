@@ -118,7 +118,7 @@ static public class AssignmentPart1 // saving and loading a single party
 
 static public class AssignmentConfiguration
 {
-    public const int PartOfAssignmentThatIsInDevelopment = 1;
+    public const int PartOfAssignmentThatIsInDevelopment = 2;
 }
 
 static public class AssignmentPart2 // saving and loading multiple parties, with unique names, and a cap of 100 parties.
@@ -132,7 +132,7 @@ static public class AssignmentPart2 // saving and loading multiple parties, with
         Directory.CreateDirectory("SavedParties"); // Creates the folder called SavedParties if it doesn't exist.
         if (Directory.Exists("SavedParties"))
         {
-            Debug.Log("The SavedParties_folder has been created.");
+            Debug.Log("The SavedParties_folder exists.");
         }
         GameContent.RefreshUI();
     }
@@ -226,18 +226,18 @@ static public class AssignmentPart2 // saving and loading multiple parties, with
 
     static public string GenerateUniqueFileName()
     {
-        int FileCountMax = Directory.GetFiles("SavedParties", "*.txt").Length;
+        int savedPartyCount = Directory.GetFiles("SavedParties", "*.txt").Length;
 
-        if (FileCountMax >= 100) // This is the cap
+        if (savedPartyCount >= 100) // This is the cap
         {
             Debug.Log("Congratulations, if you’re seeing this Debug.Log message… Why did you do this? I’m revoking your saving privileges; overwrite an existing save instead!");
             return null;
         }
         
-        string FileCount;
-        do {FileCount = "SavedParties/Schmungus" + UnityEngine.Random.Range(0, 101) + ".txt";} // The FileCount saves the SavedParties/Schmungus, then it adds a random integer from 1 to 100 + ".txt" 
-        while (File.Exists(FileCount)); // Then, if a file named FileCount exists, then :[
-        return FileCount; // If not, then you get a FileCount
+        string newSaveFilePath;
+        do {newSaveFilePath = "SavedParties/Schmungus" + UnityEngine.Random.Range(0, 101) + ".txt";} // The newSaveFilePath saves the SavedParties/Schmungus, then it adds a random integer from 1 to 100 + ".txt" 
+        while (File.Exists(newSaveFilePath)); // Then, if a file named newSaveFilePath exists, then :[
+        return newSaveFilePath; // If not, then you get a newSaveFilePath
     }
 
     static string SplitNameFromPartyText(string fileText, out string name)
